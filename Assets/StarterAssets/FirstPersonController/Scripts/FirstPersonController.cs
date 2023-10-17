@@ -1,7 +1,9 @@
-﻿using UnityEngine;
+﻿using System.Xml;
+using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
+using Cinemachine;
 
 namespace StarterAssets
 {
@@ -70,9 +72,15 @@ namespace StarterAssets
 #endif
 		private CharacterController _controller;
 		private StarterAssetsInputs _input;
+	
 		private GameObject _mainCamera;
 
 		private const float _threshold = 0.01f;
+
+		private TombEntrance _tombEntrance;
+		[SerializeField]
+		private Animator stateDrivenCamAnimator;
+		
 
 		private bool IsCurrentDeviceMouse
 		{
@@ -99,6 +107,7 @@ namespace StarterAssets
 		{
 			_controller = GetComponent<CharacterController>();
 			_input = GetComponent<StarterAssetsInputs>();
+
 #if ENABLE_INPUT_SYSTEM
 			_playerInput = GetComponent<PlayerInput>();
 #else
@@ -108,6 +117,8 @@ namespace StarterAssets
 			// reset our timeouts on start
 			_jumpTimeoutDelta = JumpTimeout;
 			_fallTimeoutDelta = FallTimeout;
+
+			_tombEntrance = FindObjectOfType<TombEntrance>();
 		}
 
 		private void Update()
@@ -115,11 +126,54 @@ namespace StarterAssets
 			JumpAndGravity();
 			GroundedCheck();
 			Move();
-		}
+			CheckInteract();
+			CheckFire();
 
-		private void LateUpdate()
+			if(Aiming() == true)
+			{
+				Debug.Log("Aiming");
+			}
+
+			else if(Aiming() == false)
+			{
+				Debug.Log("Not");
+			}
+            stateDrivenCamAnimator.SetBool("Aiming", Aiming());
+        }
+
+        private void LateUpdate()
 		{
 			CameraRotation();
+		}
+
+		private void CheckInteract()
+		{
+			if(_input.interact)
+			{
+				if(_tombEntrance.CanEnterTomb() == true)
+				{
+					Debug.Log("Entered Tomb");
+				}
+
+				_input.interact = false;
+			}
+		}
+
+		private void CheckFire()
+		{
+			if(_input.fired == true)
+			{
+				Debug.Log("Fired");
+			}
+
+			_input.fired = false;
+		}
+
+		private bool Aiming()
+		{
+
+			return _input.aiming;
+			
 		}
 
 		private void GroundedCheck()
