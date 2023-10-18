@@ -1,5 +1,7 @@
 ﻿using System.Xml;
 using UnityEngine;
+using System.Threading;
+using UnityEngine.Rendering;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
 #endif
@@ -80,7 +82,13 @@ namespace StarterAssets
 		private TombEntrance _tombEntrance;
 		[SerializeField]
 		private Animator stateDrivenCamAnimator;
-		
+
+		private Weapon _weapon;
+		private float canFire = -1f;
+		private float fireRate = 1.25f;
+
+		[SerializeField]
+		private int ammo;
 
 		private bool IsCurrentDeviceMouse
 		{
@@ -119,6 +127,7 @@ namespace StarterAssets
 			_fallTimeoutDelta = FallTimeout;
 
 			_tombEntrance = FindObjectOfType<TombEntrance>();
+			_weapon = FindObjectOfType<Weapon>();
 		}
 
 		private void Update()
@@ -159,21 +168,30 @@ namespace StarterAssets
 			}
 		}
 
-		private void CheckFire()
+		private void CheckFire() // clean this 
 		{
-			if(_input.fired == true)
+			if (_input.fired == true && canFire < Time.time && ammo > 0)
 			{
 				Debug.Log("Fired");
+				_weapon.CameraShake();
+				_weapon.PumpAnimation();
+				canFire = fireRate + Time.time;
+			}
+
+			if(ammo <= 0)
+			{
+				ammo = 0;
+				//play sound effect
 			}
 
 			_input.fired = false;
+
+
 		}
 
 		private bool Aiming()
 		{
-
 			return _input.aiming;
-			
 		}
 
 		private void GroundedCheck()
